@@ -12,16 +12,21 @@ class ToDoListViewController: UITableViewController {
     
     var itemArray = [Item]()
     
-    let defaults = UserDefaults.standard
+    let dataFilePath = FileManager.default.urls(for: .documentDirectory, in: .userDomainMask).first?.appendingPathComponent("Items.plist")
+    
+    //let defaults = UserDefaults.standard
 
     override func viewDidLoad() {
         super.viewDidLoad()
         
-//        if let items = UserDefaults.standard.array(forKey: "TodoListArray") as? [String]{
-//            itemArray = items
-//        }
+        //print(dataFilePath)
         
-        let newItem = Item()
+        
+        //        if let items = UserDefaults.standard.array(forKey: "TodoListArray") as? [String]{
+        //            itemArray = items
+        //        }
+        
+        loadItems()
         
     }
 
@@ -53,6 +58,12 @@ class ToDoListViewController: UITableViewController {
         
         itemArray[indexPath.row].done = !itemArray[indexPath.row].done
         
+        saveItems()
+        
+        
+        tableView.deselectRow(at: indexPath, animated: true)
+        
+        
         
 //        if tableView.cellForRow(at: indexPath)?.accessoryType == .checkmark {
 //
@@ -82,9 +93,9 @@ class ToDoListViewController: UITableViewController {
             
             self.itemArray.append(newItem)
             
-            self.defaults.set(self.itemArray, forKey: "TodoListArray")
+            //self.defaults.set(self.itemArray, forKey: "TodoListArray")
+            self.saveItems()
             
-            self.tableView.reloadData()
             
         }
         
@@ -98,6 +109,40 @@ class ToDoListViewController: UITableViewController {
         alert.addAction(action)
         present(alert, animated: true, completion: nil)
         
+        
+    }
+    
+    func saveItems(){
+        
+        let encoder = PropertyListEncoder()
+        
+        do{
+            let data = try encoder.encode(itemArray)
+            try data.write(to: dataFilePath!)
+        } catch {
+            
+            print("Error encoding item array, \(error)")
+            
+        }
+        
+       tableView.reloadData()
+        
+    }
+    
+    func loadItems(){
+        
+        if let data = try? Data(contentsOf: dataFilePath!){
+            
+            let decoder = PropertyListDecoder()
+            
+            do {
+                
+            itemArray = try decoder.decode([Item].self, from: data)
+                
+            } catch {
+                print("Error decoding item arry, \(error)")
+            }
+        }
         
     }
     
